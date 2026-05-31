@@ -1,0 +1,104 @@
+@if (authService.isAdmin()) {
+  <div class="space-y-6">
+    <div>
+      <h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
+        <app-icon name="settings" class="size-6" />
+        Configurações
+      </h1>
+      <p class="text-sm text-muted-foreground">Gerencie perfis de acesso, usuários e telas permitidas.</p>
+    </div>
+
+    <div class="grid w-full max-w-md grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+      <button type="button" class="rounded-md px-3 py-2 text-sm" [class.bg-background]="activeTab() === 'permissoes'" [class.shadow]="activeTab() === 'permissoes'" (click)="activeTab.set('permissoes')">Permissões</button>
+      <button type="button" class="rounded-md px-3 py-2 text-sm" [class.bg-background]="activeTab() === 'usuarios'" [class.shadow]="activeTab() === 'usuarios'" (click)="activeTab.set('usuarios')">Usuários</button>
+    </div>
+
+    @if (activeTab() === 'permissoes') {
+      @for (role of roles; track role) {
+        <div class="rounded-xl border bg-card shadow">
+          <div class="p-6 pb-2">
+            <h3 class="text-base font-semibold">{{ roleLabels[role] }}</h3>
+            <p class="text-sm text-muted-foreground">
+              @if (role === 'administrador') {
+                Acesso total a todas as telas, incluindo Configurações.
+              } @else {
+                Marque as telas que este perfil pode acessar.
+              }
+            </p>
+          </div>
+          <div class="space-y-4 p-6 pt-0">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              @for (screen of allScreens; track screen) {
+                @if (screen !== 'configuracoes' || role === 'administrador') {
+                  <label class="flex items-center gap-3 rounded-lg border p-3" [class.opacity-80]="role === 'administrador'">
+                    <input type="checkbox" [checked]="isChecked(role, screen)" [disabled]="role === 'administrador'" (change)="toggleScreen(role, screen)" />
+                    <span class="text-sm font-medium">{{ screenLabels[screen] }}</span>
+                  </label>
+                }
+              }
+            </div>
+            @if (role !== 'administrador') {
+              <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm text-primary-foreground" (click)="savePermissions(role)">Salvar {{ roleLabels[role] }}</button>
+            }
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="rounded-xl border bg-card shadow">
+        <div class="p-6 pb-2"><h3 class="text-base font-semibold">Novo usuário</h3></div>
+        <div class="grid grid-cols-1 gap-3 p-6 pt-0 sm:grid-cols-2">
+          <input class="flex h-9 rounded-md border px-3 text-sm" placeholder="Nome" [(ngModel)]="newName" />
+          <input type="email" class="flex h-9 rounded-md border px-3 text-sm" placeholder="E-mail" [(ngModel)]="newEmail" />
+          <input type="password" class="flex h-9 rounded-md border px-3 text-sm" placeholder="Senha inicial" [(ngModel)]="newPwd" />
+          <select class="flex h-9 rounded-md border px-3 text-sm" [(ngModel)]="newRole">
+            @for (r of roles; track r) { <option [value]="r">{{ roleLabels[r] }}</option> }
+          </select>
+          <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm text-primary-foreground sm:col-span-2" (click)="addUser()">Cadastrar usuário</button>
+        </div>
+      </div>
+
+      <div class="rounded-xl border bg-card shadow overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="border-b">
+            <tr>
+              <th class="p-2 text-left">Usuário</th>
+              <th class="hidden p-2 text-left sm:table-cell">E-mail</th>
+              <th class="p-2 text-left">Perfil</th>
+              <th class="p-2 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users(); track u.id) {
+              <tr class="border-b">
+                <td class="p-2">
+                  <div class="flex items-center gap-3">
+                    <app-user-avatar [name]="u.name" [photoUrl]="u.photoUrl" />
+                    <div>
+                      <p class="font-medium">{{ u.name }}</p>
+                      @if (u.id === currentUser()?.id) {
+                        <span class="text-[10px] text-muted-foreground">Sessão atual</span>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="hidden p-2 text-muted-foreground sm:table-cell">{{ u.email }}</td>
+                <td class="p-2">
+                  <select class="flex h-9 rounded-md border px-2 text-sm" [ngModel]="u.role" (ngModelChange)="onRoleChange(u.id, $event)">
+                    @for (r of roles; track r) { <option [value]="r">{{ roleLabels[r] }}</option> }
+                  </select>
+                </td>
+                <td class="p-2 text-right">
+                  @if (u.id !== currentUser()?.id) {
+                    <button type="button" class="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs" (click)="switchTo(u.id, u.name)">Entrar como</button>
+                  } @else {
+                    <span class="text-xs text-muted-foreground">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

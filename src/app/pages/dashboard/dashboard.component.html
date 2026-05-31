@@ -1,0 +1,112 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
+    <p class="text-sm text-muted-foreground">Visão geral do seu estoque em tempo real.</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <a routerLink="/inventario" [queryParams]="{ q: '', status: 'all' }" class="block rounded-xl transition-shadow hover:shadow-md">
+      <div class="rounded-xl border bg-card text-card-foreground h-full cursor-pointer hover:border-primary/40 shadow">
+        <div class="flex items-center gap-4 p-5">
+          <div class="grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
+            <app-icon name="boxes" class="size-6" />
+          </div>
+          <div>
+            <p class="text-2xl font-bold leading-none">{{ totalItems() }}</p>
+            <p class="mt-1 text-xs text-muted-foreground">Itens em Estoque</p>
+          </div>
+        </div>
+      </div>
+    </a>
+    <a routerLink="/inventario" [queryParams]="{ q: '', status: 'critical' }" class="block rounded-xl transition-shadow hover:shadow-md">
+      <div class="rounded-xl border bg-card h-full cursor-pointer hover:border-primary/40 shadow">
+        <div class="flex items-center gap-4 p-5">
+          <div class="grid size-12 place-items-center rounded-xl bg-warning/10 text-warning">
+            <app-icon name="alert-triangle" class="size-6" />
+          </div>
+          <div>
+            <p class="text-2xl font-bold leading-none">{{ critical() }}</p>
+            <p class="mt-1 text-xs text-muted-foreground">Estoque Crítico</p>
+          </div>
+        </div>
+      </div>
+    </a>
+    <a routerLink="/movimentacao" class="block rounded-xl transition-shadow hover:shadow-md">
+      <div class="rounded-xl border bg-card h-full cursor-pointer hover:border-primary/40 shadow">
+        <div class="flex items-center gap-4 p-5">
+          <div class="grid size-12 place-items-center rounded-xl bg-info/10 text-info">
+            <app-icon name="arrow-left-right" class="size-6" />
+          </div>
+          <div>
+            <p class="text-2xl font-bold leading-none">{{ movements().length }}</p>
+            <p class="mt-1 text-xs text-muted-foreground">Movimentações</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <button type="button" class="inline-flex h-14 w-full items-center justify-start gap-3 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground" (click)="scanOpen.set(true)">
+      <app-icon name="scan-line" class="size-4" />
+      Escanear Código
+    </button>
+    <a routerLink="/movimentacao" [queryParams]="{ tab: 'in' }" class="inline-flex h-14 w-full items-center justify-start gap-3 rounded-md bg-secondary px-4 text-sm font-medium text-secondary-foreground">
+      <app-icon name="arrow-down-to-line" class="size-4 text-primary" />
+      Nova Entrada
+    </a>
+    <a routerLink="/movimentacao" [queryParams]="{ tab: 'out' }" class="inline-flex h-14 w-full items-center justify-start gap-3 rounded-md bg-secondary px-4 text-sm font-medium text-secondary-foreground">
+      <app-icon name="arrow-up-from-line" class="size-4 text-destructive" />
+      Nova Saída
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
+    <div class="rounded-xl border bg-card shadow lg:col-span-3">
+      <div class="flex flex-col space-y-1.5 p-6">
+        <h3 class="flex items-center gap-2 text-base font-semibold">
+          <app-icon name="trending-up" class="size-4 text-primary" />
+          Movimentação Semanal
+        </h3>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="h-64 w-full">
+          <canvas #chartCanvas></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border bg-card shadow lg:col-span-2">
+      <div class="p-6 pb-2">
+        <h3 class="text-base font-semibold">Últimas Movimentações</h3>
+      </div>
+      <div class="space-y-3 p-6 pt-0">
+        @if (recent().length === 0) {
+          <p class="text-sm text-muted-foreground">Nenhuma movimentação.</p>
+        }
+        @for (m of recent(); track m.id) {
+          <div class="flex items-center gap-3">
+            <div class="grid size-9 shrink-0 place-items-center rounded-lg" [class]="m.type === 'in' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'">
+              @if (m.type === 'in') {
+                <app-icon name="arrow-down-to-line" class="size-4" />
+              } @else {
+                <app-icon name="arrow-up-from-line" class="size-4" />
+              }
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium">{{ m.productName }}</p>
+              <p class="text-xs text-muted-foreground">{{ m.reason }}</p>
+            </div>
+            <span class="text-sm font-semibold" [class]="m.type === 'in' ? 'text-primary' : 'text-destructive'">
+              {{ m.type === 'in' ? '+' : '-' }}{{ m.qty }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-scanner-dialog [open]="scanOpen()" mode="confirm" (openChange)="handleScannerOpenChange($event)" (scan)="handleScan($event)" />
+<app-scan-product-found-dialog [product]="foundProduct()" [open]="foundOpen()" (openChange)="foundOpen.set($event); !$event && foundProduct.set(null)" />
+<app-scan-product-not-found-dialog [sku]="unknownSku()" [open]="notFoundOpen()" (openChange)="notFoundOpen.set($event); !$event && unknownSku.set('')" />

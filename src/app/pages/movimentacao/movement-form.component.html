@@ -1,0 +1,81 @@
+<div class="rounded-xl border bg-card shadow">
+  <div class="space-y-4 p-5">
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Produto</label>
+      @if (selected) {
+        <div class="flex items-center justify-between rounded-lg border bg-muted/40 p-3">
+          <div>
+            <p class="text-sm font-medium">{{ selected.name }}</p>
+            <p class="font-mono text-xs text-muted-foreground">{{ selected.sku }} · {{ selected.qty }} {{ selected.unit }}</p>
+          </div>
+          <button type="button" class="text-sm hover:underline" (click)="selected = null">Trocar</button>
+        </div>
+      } @else {
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <app-icon name="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input class="flex h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm shadow-sm" placeholder="Buscar produto por nome ou SKU..." [(ngModel)]="search" />
+            @if (matches.length > 0) {
+              <div class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-lg">
+                @for (p of matches; track p.id) {
+                  <button type="button" class="flex w-full justify-between px-3 py-2 text-left text-sm hover:bg-accent" (click)="pick(p)">
+                    <span>{{ p.name }}</span>
+                    <span class="text-xs text-muted-foreground">{{ p.qty }} {{ p.unit }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <button type="button" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-secondary px-4 text-sm" (click)="scanOpen = true">
+            <app-icon name="scan-line" class="size-4" />
+            Scanner
+          </button>
+        </div>
+      }
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="text-sm font-medium">Quantidade</label>
+        <input type="number" min="1" class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="qty" />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium">Motivo / Justificativa</label>
+        <select class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="reason">
+          @for (r of reasons; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Data / Hora</label>
+      <input class="flex h-9 w-full rounded-md border px-3 text-sm" [value]="nowLabel" disabled />
+    </div>
+    <button
+      type="button"
+      class="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-medium text-primary-foreground"
+      [class]="type === 'in' ? 'bg-primary' : 'bg-destructive'"
+      (click)="tryConfirm()"
+    >
+      {{ type === 'in' ? 'Registrar Entrada' : 'Registrar Saída' }}
+    </button>
+  </div>
+</div>
+
+<app-scanner-dialog [open]="scanOpen" (openChange)="scanOpen = $event" (scan)="onScan($event)" />
+
+@if (confirmOpen) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" (click)="confirmOpen = false">
+    <div class="grid w-full max-w-md gap-4 rounded-lg border bg-background p-6 shadow-lg" (click)="$event.stopPropagation()">
+      <h2 class="text-lg font-semibold">Confirmar {{ type === 'in' ? 'Entrada' : 'Saída' }}</h2>
+      <p class="text-sm text-muted-foreground">
+        {{ type === 'in' ? 'Adicionar' : 'Remover' }} <strong>{{ qty }} {{ selected?.unit }}</strong> de
+        <strong>{{ selected?.name }}</strong> ({{ reason }}).
+      </p>
+      <div class="flex justify-end gap-2">
+        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm" (click)="confirmOpen = false">Cancelar</button>
+        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm text-primary-foreground" (click)="doConfirm()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+}

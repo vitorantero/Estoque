@@ -1,0 +1,94 @@
+<div class="mx-auto max-w-lg space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Perfil</h1>
+    <p class="text-sm text-muted-foreground">Seus dados e preferências do EstoqueIA.</p>
+  </div>
+
+  @if (user(); as u) {
+    <div class="rounded-xl border bg-card shadow">
+      <div class="flex flex-col items-center gap-4 px-6 pt-8 pb-6">
+        <div class="relative">
+          <app-user-avatar [name]="u.name" [photoUrl]="u.photoUrl" sizeClass="size-24 text-xl" />
+          <label class="absolute -right-1 -bottom-1 grid size-9 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground shadow-md">
+            <app-icon name="camera" class="size-4" />
+            <input type="file" accept="image/*" class="hidden" (change)="onPhotoPick($event)" />
+          </label>
+        </div>
+        <div class="text-center">
+          <p class="text-lg font-semibold">{{ registered ? u.name : 'Complete seu cadastro' }}</p>
+          @if (registered) {
+            <p class="text-sm text-muted-foreground">{{ u.email }}</p>
+            <span class="mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">{{ roleLabels[u.role] }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border bg-card shadow">
+      <div class="flex flex-col space-y-1.5 p-6">
+        <h3 class="text-base font-semibold">{{ registered ? 'Dados da conta' : 'Finalizar cadastro' }}</h3>
+        <p class="text-sm text-muted-foreground">
+          {{ registered ? 'Nome e e-mail são fixos após o cadastro.' : 'Após salvar, nome e e-mail não poderão ser alterados.' }}
+        </p>
+      </div>
+      <div class="space-y-4 p-6 pt-0">
+        @if (registered) {
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Nome</label>
+            <input class="flex h-9 w-full rounded-md border bg-muted/50 px-3 text-sm" [value]="u.name" readonly disabled />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">E-mail</label>
+            <input class="flex h-9 w-full rounded-md border bg-muted/50 px-3 text-sm" [value]="u.email" readonly disabled />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Senha</label>
+            <div class="flex gap-2">
+              <input class="flex h-9 w-full rounded-md border bg-muted/50 px-3 font-mono tracking-widest text-sm" value="••••••••" readonly disabled />
+              <button type="button" class="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-secondary px-4 text-sm" (click)="pwdOpen.set(true)">Alterar senha</button>
+            </div>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Nome *</label>
+            <input class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="name" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">E-mail *</label>
+            <input type="email" class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="email" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Senha *</label>
+            <input type="password" class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="password" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Confirmar senha *</label>
+            <input type="password" class="flex h-9 w-full rounded-md border px-3 text-sm" [(ngModel)]="confirmPwd" />
+          </div>
+          <button type="button" class="inline-flex h-9 w-full items-center justify-center rounded-md bg-primary text-sm text-primary-foreground" (click)="completeRegistration()">Concluir cadastro</button>
+        }
+      </div>
+    </div>
+
+    <div class="rounded-xl border bg-card shadow">
+      <div class="flex flex-col space-y-1.5 p-6">
+        <h3 class="text-base font-semibold">Aparência</h3>
+        <p class="text-sm text-muted-foreground">Escolha como o aplicativo é exibido.</p>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="flex items-center justify-between rounded-xl border bg-muted/30 p-4">
+          <div>
+            <p class="text-sm font-medium">Modo escuro</p>
+            <p class="text-xs text-muted-foreground">{{ theme() === 'dark' ? 'Tema escuro ativado' : 'Tema claro ativado' }}</p>
+          </div>
+          <label class="relative inline-flex cursor-pointer items-center">
+            <input type="checkbox" class="peer sr-only" [checked]="theme() === 'dark'" (change)="onThemeChange($any($event.target).checked)" />
+            <span class="h-5 w-9 rounded-full bg-input after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-background after:transition peer-checked:bg-primary peer-checked:after:translate-x-4"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  }
+
+  <app-change-password-dialog [open]="pwdOpen()" (openChange)="pwdOpen.set($event)" />
+</div>

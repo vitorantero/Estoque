@@ -1,0 +1,55 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Movimentação</h1>
+    <p class="text-sm text-muted-foreground">Registre entradas e saídas do estoque.</p>
+  </div>
+
+  <div class="grid w-full grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium" [class.bg-background]="activeTab() === 'in'" [class.shadow]="activeTab() === 'in'" (click)="activeTab.set('in')">
+      <app-icon name="arrow-down-to-line" class="size-4" />
+      Registrar Entrada
+    </button>
+    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium" [class.bg-background]="activeTab() === 'out'" [class.shadow]="activeTab() === 'out'" (click)="activeTab.set('out')">
+      <app-icon name="arrow-up-from-line" class="size-4" />
+      Registrar Saída
+    </button>
+  </div>
+
+  @if (activeTab() === 'in') {
+    <app-movement-form type="in" [preset]="presetProduct()" />
+  } @else {
+    <app-movement-form type="out" [preset]="presetProduct()" />
+  }
+
+  <div class="rounded-xl border bg-card shadow">
+    <div class="p-6 pb-2">
+      <h3 class="flex items-center gap-2 text-base font-semibold">
+        <app-icon name="history" class="size-4" />
+        Histórico Recente
+      </h3>
+    </div>
+    <div class="space-y-2 p-6 pt-0">
+      @for (m of history(); track m.id) {
+        <div class="flex items-center gap-3 rounded-lg border p-3">
+          <div class="grid size-9 shrink-0 place-items-center rounded-lg text-sm" [class]="m.type === 'in' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'">
+            @if (m.type === 'in') {
+              <app-icon name="arrow-down-to-line" class="size-4" />
+            } @else {
+              <app-icon name="arrow-up-from-line" class="size-4" />
+            }
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">{{ m.productName }}</p>
+            <p class="text-xs text-muted-foreground">{{ m.reason }} · {{ formatWhen(m.date) }}</p>
+          </div>
+          <span class="text-sm font-semibold" [class]="m.type === 'in' ? 'text-primary' : 'text-destructive'">
+            {{ m.type === 'in' ? '+' : '-' }}{{ m.qty }}
+          </span>
+        </div>
+      }
+      @if (history().length === 0) {
+        <p class="text-sm text-muted-foreground">Sem movimentações.</p>
+      }
+    </div>
+  </div>
+</div>
